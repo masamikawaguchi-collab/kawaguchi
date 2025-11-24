@@ -1,62 +1,100 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage, InventoryItem, InventoryLog } from '../types';
-import { sendInventoryQuery } from '../services/geminiService';
-import { Button } from './Button';
+'use client'
+
+import React, { useState, useRef, useEffect } from 'react'
+import { InventoryItem, InventoryLog } from '@/lib/types'
+import { Button } from './Button'
+
+interface ChatMessage {
+  id: string
+  role: 'user' | 'model'
+  text: string
+  timestamp: number
+}
 
 interface AIChatProps {
-  inventory: InventoryItem[];
-  logs: InventoryLog[];
+  inventory: InventoryItem[]
+  logs: InventoryLog[]
 }
 
 export const AIChat: React.FC<AIChatProps> = ({ inventory, logs }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 'welcome', role: 'model', text: 'こんにちは。在庫に関する質問があればお答えします。「在庫数が少ない商品は？」「今週の入庫状況は？」などと聞いてみてください。', timestamp: Date.now() }
-  ]);
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+    {
+      id: 'welcome',
+      role: 'model',
+      text: 'こんにちは。在庫に関する質問があればお答えします。「在庫数が少ない商品は？」「今週の入庫状況は？」などと聞いてみてください。',
+      timestamp: Date.now(),
+    },
+  ])
+  const [inputValue, setInputValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    scrollToBottom()
+  }, [messages])
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading) return
 
-    const userText = inputValue;
-    setInputValue('');
-    
+    const userText = inputValue
+    setInputValue('')
+
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       text: userText,
-      timestamp: Date.now()
-    };
+      timestamp: Date.now(),
+    }
 
-    setMessages(prev => [...prev, userMsg]);
-    setIsLoading(true);
+    setMessages((prev) => [...prev, userMsg])
+    setIsLoading(true)
 
-    // Call Gemini API
-    const aiResponseText = await sendInventoryQuery(userText, inventory, logs);
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: userText,
+          inventory,
+          logs,
+        }),
+      })
 
-    const aiMsg: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      role: 'model',
-      text: aiResponseText,
-      timestamp: Date.now()
-    };
+      if (!res.ok) {
+        throw new Error('AI応答の取得に失敗しました')
+      }
 
-    setMessages(prev => [...prev, aiMsg]);
-    setIsLoading(false);
-  };
+      const data = await res.json()
+      const aiResponseText = data.answer || 'すみません、回答を生成できませんでした。'
+
+      const aiMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: aiResponseText,
+        timestamp: Date.now(),
+      }
+
+      setMessages((prev) => [...prev, aiMsg])
+    } catch (error) {
+      console.error('AI Chat error:', error)
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: '申し訳ありません。AIサービスの接続に失敗しました。時間をおいて再度お試しください。',
+        timestamp: Date.now(),
+      }
+      setMessages((prev) => [...prev, errorMsg])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] min-h-[500px] bg-white shadow rounded-lg overflow-hidden border border-gray-200">
-      {/* Header */}
       <div className="bg-blue-50 p-4 border-b border-blue-100">
         <h2 className="text-lg font-bold text-blue-800 flex items-center">
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,15 +105,12 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory, logs }) => {
         <p className="text-xs text-blue-600 mt-1">現在の在庫データに基づいて回答します。</p>
       </div>
 
-      {/* Message List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div 
+            <div
               className={`max-w-[80%] rounded-lg px-4 py-3 shadow-sm whitespace-pre-wrap ${
-                msg.role === 'user' 
-                  ? 'bg-blue-600 text-white rounded-br-none' 
-                  : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
               }`}
             >
               {msg.text}
@@ -96,7 +131,6 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory, logs }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
       <div className="p-4 bg-white border-t border-gray-200">
         <div className="flex space-x-2">
           <input
@@ -108,15 +142,11 @@ export const AIChat: React.FC<AIChatProps> = ({ inventory, logs }) => {
             onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleSend()}
             disabled={isLoading}
           />
-          <Button 
-            onClick={handleSend} 
-            disabled={isLoading || !inputValue.trim()}
-            className="px-6"
-          >
+          <Button onClick={handleSend} disabled={isLoading || !inputValue.trim()} className="px-6">
             送信
           </Button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
