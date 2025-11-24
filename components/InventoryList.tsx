@@ -1,60 +1,63 @@
-import React, { useState, useMemo } from 'react';
-import { InventoryItem } from '../types';
-import { Button } from './Button';
+'use client'
+
+import React, { useState, useMemo } from 'react'
+import { InventoryItem } from '@/lib/types'
+import { Button } from './Button'
 
 interface InventoryListProps {
-  items: InventoryItem[];
-  onEdit: (item: InventoryItem) => void;
-  onAddStock: (item: InventoryItem) => void;
-  onRemoveStock: (item: InventoryItem) => void;
-  onDelete: (item: InventoryItem) => void;
+  items: InventoryItem[]
+  onEdit: (item: InventoryItem) => void
+  onAddStock: (item: InventoryItem) => void
+  onRemoveStock: (item: InventoryItem) => void
+  onDelete: (item: InventoryItem) => void
 }
 
 export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onAddStock, onRemoveStock, onDelete }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: keyof InventoryItem; direction: 'asc' | 'desc' } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortConfig, setSortConfig] = useState<{ key: keyof InventoryItem; direction: 'asc' | 'desc' } | null>(null)
 
   const filteredItems = useMemo(() => {
-    return items.filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [items, searchTerm]);
+    return items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [items, searchTerm])
 
   const sortedItems = useMemo(() => {
-    let sortableItems = [...filteredItems];
+    let sortableItems = [...filteredItems]
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        const aVal = a[sortConfig.key];
-        const bVal = b[sortConfig.key];
-        
-        if (aVal === undefined || bVal === undefined) return 0;
+        const aVal = a[sortConfig.key]
+        const bVal = b[sortConfig.key]
+
+        if (aVal === undefined || aVal === null || bVal === undefined || bVal === null) return 0
 
         if (aVal < bVal) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+          return sortConfig.direction === 'asc' ? -1 : 1
         }
         if (aVal > bVal) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+          return sortConfig.direction === 'asc' ? 1 : -1
         }
-        return 0;
-      });
+        return 0
+      })
     }
-    return sortableItems;
-  }, [filteredItems, sortConfig]);
+    return sortableItems
+  }, [filteredItems, sortConfig])
 
   const requestSort = (key: keyof InventoryItem) => {
-    let direction: 'asc' | 'desc' = 'asc';
+    let direction: 'asc' | 'desc' = 'asc'
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+      direction = 'desc'
     }
-    setSortConfig({ key, direction });
-  };
+    setSortConfig({ key, direction })
+  }
 
   const SortIcon = ({ columnKey }: { columnKey: keyof InventoryItem }) => {
-    if (sortConfig?.key !== columnKey) return <span className="ml-1 text-gray-400">↕</span>;
-    return <span className="ml-1 text-primary-600">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
-  };
+    if (sortConfig?.key !== columnKey) return <span className="ml-1 text-gray-400">↕</span>
+    return <span className="ml-1 text-primary-600">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+  }
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -73,9 +76,7 @@ export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onA
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="text-sm text-gray-500">
-          全 {filteredItems.length} 件
-        </div>
+        <div className="text-sm text-gray-500">全 {filteredItems.length} 件</div>
       </div>
 
       <div className="overflow-x-auto">
@@ -83,28 +84,16 @@ export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onA
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">画像</th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                onClick={() => requestSort('name')}
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => requestSort('name')}>
                 商品名 <SortIcon columnKey="name" />
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                onClick={() => requestSort('code')}
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => requestSort('code')}>
                 コード <SortIcon columnKey="code" />
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                onClick={() => requestSort('quantity')}
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => requestSort('quantity')}>
                 在庫数 <SortIcon columnKey="quantity" />
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                onClick={() => requestSort('location')}
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => requestSort('location')}>
                 保管場所 <SortIcon columnKey="location" />
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最新入出庫</th>
@@ -123,11 +112,7 @@ export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onA
                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="h-10 w-10 rounded bg-gray-200 overflow-hidden border border-gray-200 flex items-center justify-center">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-xs text-gray-400">No Img</span>
-                      )}
+                      {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : <span className="text-xs text-gray-400">No Img</span>}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -137,23 +122,25 @@ export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onA
                     <div className="text-sm text-gray-500">{item.code}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      item.quantity < 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    }`}>
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.quantity < 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                       {item.quantity}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.location}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.location}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                    <div>入: {item.lastInDate ? new Date(item.lastInDate).toLocaleDateString() : '-'}</div>
-                    <div>出: {item.lastOutDate ? new Date(item.lastOutDate).toLocaleDateString() : '-'}</div>
+                    <div>入: {item.last_in_date ? new Date(item.last_in_date).toLocaleDateString() : '-'}</div>
+                    <div>出: {item.last_out_date ? new Date(item.last_out_date).toLocaleDateString() : '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button onClick={() => onAddStock(item)} className="text-blue-600 hover:text-blue-900 bg-blue-50 px-2 py-1 rounded">入庫</button>
-                    <button onClick={() => onRemoveStock(item)} className="text-orange-600 hover:text-orange-900 bg-orange-50 px-2 py-1 rounded">出庫</button>
-                    <button onClick={() => onEdit(item)} className="text-gray-600 hover:text-gray-900 px-2 py-1">編集</button>
+                    <button onClick={() => onAddStock(item)} className="text-blue-600 hover:text-blue-900 bg-blue-50 px-2 py-1 rounded">
+                      入庫
+                    </button>
+                    <button onClick={() => onRemoveStock(item)} className="text-orange-600 hover:text-orange-900 bg-orange-50 px-2 py-1 rounded">
+                      出庫
+                    </button>
+                    <button onClick={() => onEdit(item)} className="text-gray-600 hover:text-gray-900 px-2 py-1">
+                      編集
+                    </button>
                   </td>
                 </tr>
               ))
@@ -162,5 +149,5 @@ export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onA
         </table>
       </div>
     </div>
-  );
-};
+  )
+}
