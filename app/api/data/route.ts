@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createClient()
 
     // ユーザー認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createClient()
 
     // ユーザー認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createClient()
 
     // ユーザー認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser()
