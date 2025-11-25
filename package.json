@@ -13,9 +13,11 @@
     "@google/generative-ai": "^0.21.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.48.0",
+    "client-only": "^0.0.1",
     "next": "^15.1.5",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
