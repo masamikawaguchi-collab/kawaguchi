@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { InventoryItem, InventoryLog } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createClient()
 
     // ユーザー認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser()
