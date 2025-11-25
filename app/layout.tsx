@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'AI-powered inventory management system',
 }
 
+// ビルド時の静的生成を無効化（Supabase認証を使用するため）
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: {
