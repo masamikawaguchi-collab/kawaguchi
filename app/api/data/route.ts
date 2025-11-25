@@ -264,7 +264,6 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
-    const id = searchParams.get('id')
 
     if (type === 'chat-all') {
       // チャット履歴を全削除
