@@ -48,6 +48,8 @@ export default function DashboardPage() {
     if (!authLoading && user) {
       fetchData()
     }
+    // fetchData is stable, no need to include in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user])
 
   const fetchData = async () => {
@@ -156,27 +158,24 @@ export default function DashboardPage() {
 
   const handleSaveItem = async () => {
     if (!formData.name || !formData.code) {
-      alert('商品名と商品コードは必須です')
+      showNotification('error', '商品名と商品コードは必須です')
       return
     }
     if (formData.quantity < 0) {
-      alert('在庫数は0以上である必要があります')
+      showNotification('error', '在庫数は0以上である必要があります')
       return
     }
 
     try {
       const action = modalMode === OperationType.CREATE_ITEM ? 'create' : 'update'
-      const body: any = {
+      const body = {
         type: 'item',
         action,
         data: {
           ...formData,
           imageUrl: formData.imageUrl,
+          ...(action === 'update' && selectedItem ? { id: selectedItem.id } : {}),
         },
-      }
-
-      if (action === 'update' && selectedItem) {
-        body.data.id = selectedItem.id
       }
 
       const res = await fetch('/api/data', {
@@ -194,14 +193,14 @@ export default function DashboardPage() {
       await fetchData()
       showNotification('success', action === 'create' ? '在庫情報を登録しました' : '在庫情報を更新しました')
       closeModal()
-    } catch (error: any) {
-      alert(error.message || '保存に失敗しました')
+    } catch (error) {
+      showNotification('error', error instanceof Error ? error.message : '保存に失敗しました')
     }
   }
 
   const handleStockOperation = async () => {
     if (opQuantity <= 0) {
-      alert('数量は1以上を入力してください')
+      showNotification('error', '数量は1以上を入力してください')
       return
     }
     if (!selectedItem) return
@@ -209,7 +208,7 @@ export default function DashboardPage() {
     const isAdd = modalMode === OperationType.ADD_STOCK
 
     if (!isAdd && selectedItem.quantity < opQuantity) {
-      alert('在庫数が不足しています')
+      showNotification('error', '在庫数が不足しています')
       return
     }
 
@@ -236,8 +235,8 @@ export default function DashboardPage() {
       await fetchData()
       showNotification('success', isAdd ? '入庫情報を登録しました' : '出庫情報を登録しました')
       closeModal()
-    } catch (error: any) {
-      alert(error.message || '操作に失敗しました')
+    } catch (error) {
+      showNotification('error', error instanceof Error ? error.message : '操作に失敗しました')
     }
   }
 
@@ -270,7 +269,7 @@ export default function DashboardPage() {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('ファイルサイズは5MB以下にしてください')
+        showNotification('error', 'ファイルサイズは5MB以下にしてください')
         return
       }
 

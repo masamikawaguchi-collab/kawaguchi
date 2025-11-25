@@ -182,7 +182,9 @@ export async function POST(request: NextRequest) {
       const now = new Date().toISOString()
 
       // 在庫数を更新
-      const updateData: any = { quantity: newQuantity }
+      const updateData: { quantity: number; last_in_date?: string; last_out_date?: string } = {
+        quantity: newQuantity
+      }
       if (isAdd) {
         updateData.last_in_date = now
       } else {

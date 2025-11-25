@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { InventoryItem, InventoryLog } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,18 +42,21 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // コンテキスト作成
-    const currentInventorySummary = inventory
+    const inventoryItems = inventory as InventoryItem[]
+    const inventoryLogs = logs as InventoryLog[]
+
+    const currentInventorySummary = inventoryItems
       .map(
-        (item: any) =>
+        (item) =>
           `- 商品名: ${item.name} (コード: ${item.code}), 在庫数: ${item.quantity}, 保管場所: ${item.location}, 最新入庫: ${item.last_in_date || 'なし'}, 最新出庫: ${item.last_out_date || 'なし'}`
       )
       .join('\n')
 
-    const recentLogsSummary = logs
-      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    const recentLogsSummary = inventoryLogs
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10)
       .map(
-        (log: any) =>
+        (log) =>
           `- ${new Date(log.date).toLocaleDateString()} ${log.type === 'in' ? '入庫' : '出庫'}: ${log.item_name} (${log.quantity}個)`
       )
       .join('\n')
@@ -96,11 +100,11 @@ ${recentLogsSummary || 'データなし'}
     }
 
     return NextResponse.json({ answer: text })
-  } catch (error: any) {
+  } catch (error) {
     console.error('POST /api/ai error:', error)
 
     // Gemini APIエラーの詳細を返す
-    if (error.message?.includes('API key')) {
+    if (error instanceof Error && error.message?.includes('API key')) {
       return NextResponse.json(
         { error: 'Invalid Gemini API key' },
         { status: 500 }

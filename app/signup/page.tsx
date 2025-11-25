@@ -43,8 +43,8 @@ export default function SignupPage() {
       if (error) throw error
 
       setSuccess(true)
-    } catch (error: any) {
-      setError(error.message || 'アカウント作成に失敗しました')
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'アカウント作成に失敗しました')
     } finally {
       setLoading(false)
     }
