@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react'
 import { InventoryItem } from '@/lib/types'
-import { Button } from './Button'
 
 interface InventoryListProps {
   items: InventoryItem[]
@@ -12,7 +11,7 @@ interface InventoryListProps {
   onDelete: (item: InventoryItem) => void
 }
 
-export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onAddStock, onRemoveStock, onDelete }) => {
+export const InventoryList: React.FC<InventoryListProps> = ({ items, onEdit, onAddStock, onRemoveStock, onDelete: _onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState<{ key: keyof InventoryItem; direction: 'asc' | 'desc' } | null>(null)
 
