@@ -5,7 +5,7 @@ import { InventoryItem, InventoryLog } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // ユーザー認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser()
