@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next()
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
 
   // 認証が不要なパス
   const publicPaths = ['/login', '/signup']
@@ -11,7 +13,7 @@ export async function middleware(request: NextRequest) {
 
   // APIルートは別途認証チェックしているのでスキップ
   if (request.nextUrl.pathname.startsWith('/api')) {
-    return res
+    return supabaseResponse
   }
 
   // 環境変数チェック
@@ -20,12 +22,27 @@ export async function middleware(request: NextRequest) {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Supabase environment variables not set')
-    return res
+    return supabaseResponse
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+        supabaseResponse = NextResponse.next({
+          request,
+        })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
 
-  // トークンの検証
+  // セッション更新（重要: これがないと認証が維持されない）
   const { data: { user } } = await supabase.auth.getUser()
 
   // ログインページにアクセス済みのユーザーは/にリダイレクト
@@ -38,7 +55,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  return res
+  return supabaseResponse
 }
 
 export const config = {
